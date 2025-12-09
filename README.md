@@ -1,4 +1,4 @@
-# 🔗 QR Tracker
+# 🔗 qr-url-stats
 
 Acortador de URLs con códigos QR y tracking detallado de scans. Construido con Rust, Axum y SQLite.
 
@@ -35,7 +35,7 @@ Acortador de URLs con códigos QR y tracking detallado de scans. Construido con 
 1. **Clonar el repositorio**
    ```bash
    git clone <tu-repo>
-   cd qr-tracker
+   cd qr-url-stats
    ```
 
 2. **Instalar dependencias**
@@ -63,7 +63,7 @@ El servidor estará disponible en `http://localhost:3000`
 ## 📁 Estructura del proyecto
 
 ```
-qr-tracker/
+qr-url-stats/
 ├── src/
 │   ├── handlers/
 │   │   ├── mod.rs
@@ -219,8 +219,8 @@ COPY . .
 RUN cargo build --release
 
 FROM debian:bookworm-slim
-COPY --from=builder /app/target/release/qr-tracker /usr/local/bin/
-CMD ["qr-tracker"]
+COPY --from=builder /app/target/release/qr-url-stats /usr/local/bin/
+CMD ["qr-url-stats"]
 ```
 
 ## 🐛 Troubleshooting
