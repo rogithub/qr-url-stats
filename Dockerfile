@@ -1,5 +1,5 @@
 # === 1. Etapa de Construcción (Build Stage) ===
-FROM rust:buster-nightly as builder
+FROM rustlang/rust:nightly-bullseye AS builder
 RUN apt-get update && apt-get install -y pkg-config libsqlite3-dev
 WORKDIR /app
 COPY . .
