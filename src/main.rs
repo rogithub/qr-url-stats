@@ -19,9 +19,14 @@ use std::{net::SocketAddr, time::Duration};
 
 #[tokio::main]
 async fn main() {
-    let pool = SqlitePool::connect("sqlite:qr.db")
-        .await
-        .expect("No se pudo conectar a la base de datos");
+    // Lee la variable de entorno DATABASE_URL.
+    // Si no existe (Entorno Local), usa la ruta relativa 'sqlite:qr.db'.
+    // Si sí existe (Docker/k3s), usará la ruta absoluta 'sqlite:/data/db/qr.db'.
+    let pool = SqlitePool::connect(
+        &std::env::var("DATABASE_URL")
+            .unwrap_or_else(|_| "sqlite:qr.db".to_string())
+    ).await
+    .expect("No se pudo conectar a la base de datos");
 
     println!("✅ Conectado a SQLite");
 
