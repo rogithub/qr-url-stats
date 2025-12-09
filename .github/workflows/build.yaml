@@ -1,4 +1,4 @@
-name: Build and Push Rust API Image
+name: Build and Push Rust API Image (ARM64)
 
 on:
   push:
@@ -10,35 +10,36 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Necesario para subir a GHCR
+      packages: write # Permiso esencial para subir a GHCR
 
     steps:
-      - name: Checkout repository
+      - name: 🛒 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
+      - name: ⚙️ Set up QEMU (Emulación ARM)
         uses: docker/setup-qemu-action@v3
-        # Emulación de ARM64
+        # Prepara la emulación de ARM64 para poder compilar
 
-      - name: Set up Docker Buildx
+      - name: 🔨 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        # Constructor avanzado de Docker
+        # Prepara el constructor multi-arquitectura
 
-      - name: Log in to GitHub Container Registry
+      - name: 🔑 Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
+          # GITHUB_TOKEN es una secret provista por GitHub automáticamente
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Build and push Docker image
+      - name: 🚀 Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: . # Usa el directorio raíz (donde está el Dockerfile)
-          file: ./Dockerfile # Especifica tu Dockerfile (asumimos que está en la raíz)
+          context: . 
+          file: ./Dockerfile 
           push: true
-          platforms: linux/arm64 # ¡Construye para tu Raspberry Pi!
-          # **TAGs AJUSTADAS**
+          # **¡El target crucial para tus Raspberry Pi!**
+          platforms: linux/arm64 
           tags: ghcr.io/${{ github.repository_owner }}/qr-url-stats:latest 
           cache-from: type=gha
           cache-to: type=gha,mode=max
