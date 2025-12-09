@@ -1,5 +1,5 @@
 # === 1. Etapa de Construcción (Build Stage) ===
-FROM rust:nightly as builder
+FROM rust:slim-nightly as builder
 RUN apt-get update && apt-get install -y pkg-config libsqlite3-dev
 WORKDIR /app
 COPY . .
