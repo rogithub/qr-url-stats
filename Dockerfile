@@ -1,24 +1,44 @@
-# === 1. Etapa de Construcción (Build Stage) ===
-FROM rustlang/rust:nightly-bullseye AS builder
-RUN apt-get update && apt-get install -y pkg-config libsqlite3-dev
+# === 1. Build Stage con cross-compilation ===
+FROM --platform=linux/amd64 rust:1.70 AS builder
+
+# Instalar cross-compiler para ARM64
+RUN apt-get update && \
+    apt-get install -y gcc-aarch64-linux-gnu pkg-config libsqlite3-dev && \
+    rustup target add aarch64-unknown-linux-gnu
+
 WORKDIR /app
+
+# Configurar Cargo para cross-compilation
+RUN mkdir -p .cargo && \
+    echo '[target.aarch64-unknown-linux-gnu]' > .cargo/config.toml && \
+    echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
+
+# Copiar solo Cargo.toml primero (para cachear dependencias)
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release --target aarch64-unknown-linux-gnu && \
+    rm -rf src
+
+# Ahora copiar el código real y compilar
 COPY . .
-# La compilación sigue siendo para ARM64
-RUN cargo build --release --target aarch64-unknown-linux-gnu 
+RUN touch src/main.rs && \
+    cargo build --release --target aarch64-unknown-linux-gnu
 
-# === 2. Etapa Final Ligera (Runtime Stage) ===
-FROM debian:bullseye-slim
+# === 2. Runtime Stage ===
+FROM --platform=linux/arm64 debian:bullseye-slim
 
-# Instala la librería SQLite y limpia cache
-RUN apt-get update && apt-get install -y libsqlite3-0 \
-    && rm -rf /var/lib/apt/lists/* # Crea el directorio donde K8s montará el PVC
-RUN mkdir -p /data/db 
+RUN apt-get update && \
+    apt-get install -y libsqlite3-0 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copia el binario ARM64
+RUN mkdir -p /data/db
+
 COPY --from=builder /app/target/aarch64-unknown-linux-gnu/release/qr-url-stats /usr/local/bin/
+COPY --from=builder /app/static /static
+COPY --from=builder /app/migrations /migrations
 
-# ESTABLECE LA VARIABLE DE ENTORNO PARA EL CONTENEDOR (PRODUCCIÓN)
-ENV DATABASE_URL=sqlite:/data/db/qr.db 
+ENV DATABASE_URL=sqlite:/data/db/qr.db
 
 EXPOSE 8080
-ENTRYPOINT ["/usr/local/bin/qr-url-stats"]
+CMD ["/usr/local/bin/qr-url-stats"]
