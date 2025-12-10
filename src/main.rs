@@ -1,6 +1,7 @@
 mod handlers;
 mod models;
 mod utils;
+mod config;
 
 use axum::{
     Router, http::StatusCode, routing::{get, post}
@@ -10,7 +11,7 @@ use tower_governor::{
     GovernorLayer,
 };
 
-
+use config::Config;
 use sqlx::sqlite::SqlitePool;
 use std::{net::SocketAddr, time::Duration};
 
@@ -27,6 +28,10 @@ async fn main() {
     .expect("No se pudo conectar a la base de datos");
 
     println!("✅ Conectado a SQLite");
+
+    let config = Config::from_env();
+    println!("🚀 Servidor corriendo en {}", config.base_url);
+    
 
     // Configurar rate limiting
     // 10 requests por minuto por IP
@@ -58,14 +63,14 @@ async fn main() {
         .fallback(|| async {
             (StatusCode::NOT_FOUND, "404 - Not Found")
         })
-        .with_state(pool);
+        .with_state((pool, config));
+
+    println!("🚦 Rate limit: 10 requests por minuto");
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
         .await
         .unwrap();
     
-    println!("🚀 Servidor corriendo en http://localhost:3000");
-    println!("🚦 Rate limit: 10 requests por minuto");
     
     axum::serve(
         listener,

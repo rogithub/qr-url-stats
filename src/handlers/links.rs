@@ -10,17 +10,11 @@ use sqlx::SqlitePool;
 use std::net::SocketAddr;
 use qrcode::{QrCode, render::svg};
 
-use crate::{models::{
-    ShortenRequest, 
-    ShortenResponse,
-    LocationRequest,
-    LocationResponse, 
-    Link,
-    QrResponse,
-    ErrorResponse}, utils::validate_url};
+use crate::{config::Config, models::{
+    ErrorResponse, Link, LocationRequest, LocationResponse, QrResponse, ShortenRequest, ShortenResponse}, utils::validate_url};
 
 pub async fn get_qr(
-    State(pool): State<SqlitePool>,
+    State((pool, config)): State<(SqlitePool, Config)>,
     Path(id): Path<String>,
 ) -> Result<Json<QrResponse>, (StatusCode, Json<ErrorResponse>)> {
     
@@ -44,7 +38,7 @@ pub async fn get_qr(
         }))),
     };
 
-    let short_url = format!("http://localhost:3000/r/{}", id);
+    let short_url = format!("{}/r/{}", config.base_url, id);
     
     let code = QrCode::new(&short_url).expect("Error al generar QR");
     let qr_svg = code
@@ -63,7 +57,7 @@ pub async fn get_qr(
 
 
 pub async fn shorten_url(
-    State(pool): State<SqlitePool>,
+    State((pool, config)): State<(SqlitePool, Config)>,
     Json(payload): Json<ShortenRequest>,
 ) -> Result<Json<ShortenResponse>, (StatusCode, Json<ErrorResponse>)> {
     
@@ -92,7 +86,7 @@ pub async fn shorten_url(
         .await
         .expect("Error al guardar en DB");
     
-    let short_url = format!("http://localhost:3000/r/{}", id);
+    let short_url = format!("{}/r/{}", config.base_url, id);
     
     let code = QrCode::new(&short_url).expect("Error al generar QR");
     let qr_svg = code
@@ -108,7 +102,7 @@ pub async fn shorten_url(
 }
 
 pub async fn redirect_handler(
-    State(pool): State<SqlitePool>,
+    State((pool, _)): State<(SqlitePool, Config)>,
     Path(id): Path<String>,
     headers: HeaderMap,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
@@ -158,7 +152,7 @@ pub async fn redirect_handler(
 
 
 pub async fn register_location(
-    State(pool): State<SqlitePool>,
+    State((pool, _)): State<(SqlitePool, Config)>,
     Path(id): Path<String>,
     Json(payload): Json<LocationRequest>,
 ) -> Result<Json<LocationResponse>, (StatusCode, Json<ErrorResponse>)> {
