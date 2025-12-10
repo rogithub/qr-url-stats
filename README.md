@@ -62,7 +62,7 @@ https://qr.xplaya.com
    cargo run
    ```
 
-El servidor estará disponible en `http://localhost:3000`
+El servidor estará disponible en `https://qr.xplaya.com`
 
 ## 📁 Estructura del proyecto
 
@@ -90,7 +90,7 @@ Crea un link corto con código QR.
 **Request:**
 ```json
 {
-  "url": "https://example.com"
+  "url": "https://qr.xplaya.com"
 }
 ```
 
@@ -98,7 +98,7 @@ Crea un link corto con código QR.
 ```json
 {
   "id": "abc12345",
-  "short_url": "http://localhost:3000/r/abc12345",
+  "short_url": "https://qr.xplaya.com/r/abc12345",
   "qr_svg": "<svg>...</svg>"
 }
 ```
@@ -108,7 +108,7 @@ Redirige al URL original y registra el scan.
 
 **Ejemplo:**
 ```bash
-curl http://localhost:3000/r/abc12345
+curl https://qr.xplaya.com/r/abc12345
 ```
 
 ### GET `/{id}`
@@ -116,7 +116,7 @@ Obtiene el qr code e información del número de scans.
 
 **Ejemplo:**
 ```bash
-curl http://localhost:3000/abc12345
+curl https://qr.xplaya.com/abc12345
 ```
 
 ## 🗄️ Base de datos
@@ -166,14 +166,14 @@ sqlite3 qr.db "SELECT link_id, COUNT(*) as total FROM scans GROUP BY link_id;"
 
 **Crear link:**
 ```bash
-curl -X POST http://localhost:3000/api/shorten \
+curl -X POST https://qr.xplaya.com/api/shorten \
   -H "Content-Type: application/json" \
   -d '{"url": "https://xplaya.com"}'
 ```
 
 **Crear location:**
 ```bash
-curl -X POST http://localhost:3000/api/nUu4-VNO/location \
+curl -X POST https://qr.xplaya.com/api/aYv4-ovn/location \
   -H "Content-Type: application/json" \
   -d '{"lat": 20.6772586, "lon": -87.1131889, "description": "Papelería El Gordo" }'
 ```
@@ -181,7 +181,7 @@ curl -X POST http://localhost:3000/api/nUu4-VNO/location \
 **Probar rate limiting:**
 ```bash
 for i in {1..15}; do
-  curl -X POST http://localhost:3000/api/shorten \
+  curl -X POST https://qr.xplaya.com/api/shorten \
     -H "Content-Type: application/json" \
     -d '{"url": "https://google.com"}' \
     -w "\nStatus: %{http_code}\n"
