@@ -12,6 +12,23 @@ pub struct ShortenResponse {
     pub qr_svg: String,
 }
 
+#[derive(sqlx::FromRow, Debug)]
+pub struct Link {
+    pub id: String,
+    pub original_url: String,
+    pub scans: i32,
+    pub created_at: String,
+}
+
+#[derive(Serialize)]
+pub struct QrResponse {
+    pub id: String,
+    pub original_url: String,
+    pub scans: i32,
+    pub created_at: String,
+    pub qr_svg: String,
+}
+
 #[derive(Serialize)]
 pub struct ErrorResponse {
     pub error: String,

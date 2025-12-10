@@ -50,6 +50,7 @@ async fn main() {
     });
 
     let app = Router::new()
+        .route("/api/{id}", get(handlers::links::get_qr))
         .route("/api/shorten", post(handlers::links::shorten_url))
         .route("/r/{id}", get(handlers::links::redirect_handler))
         .route("/api/{id}/location", post(handlers::links::register_location)) 

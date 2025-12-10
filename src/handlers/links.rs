@@ -15,7 +15,52 @@ use crate::{models::{
     ShortenResponse,
     LocationRequest,
     LocationResponse, 
+    Link,
+    QrResponse,
     ErrorResponse}, utils::validate_url};
+
+pub async fn get_qr(
+    State(pool): State<SqlitePool>,
+    Path(id): Path<String>,
+) -> Result<Json<QrResponse>, (StatusCode, Json<ErrorResponse>)> {
+    
+    let link_option: Option<Link> = sqlx::query_as::<_, Link>(
+        "SELECT id, original_url, scans, created_at FROM links WHERE id = ?"
+    )
+    .bind(&id)
+    .fetch_optional(&pool)
+    .await
+    .map_err(|_| {
+        // Aquí convertimos sqlx::Error a tu tipo de error
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorResponse { 
+            error: "Error interno del servidor".to_string() 
+        }))
+    })?;
+
+    let link = match link_option {
+        Some(link) => link,
+        None => return Err((StatusCode::NOT_FOUND, Json(ErrorResponse { 
+            error: "QR no encontrado".to_string() 
+        }))),
+    };
+
+    let short_url = format!("http://localhost:3000/r/{}", id);
+    
+    let code = QrCode::new(&short_url).expect("Error al generar QR");
+    let qr_svg = code
+        .render::<svg::Color>()
+        .min_dimensions(200, 200)
+        .build();
+    
+    Ok(Json(QrResponse {
+        id: link.id.clone(),
+        original_url: link.original_url.clone(),
+        scans: link.scans,
+        created_at: link.created_at.clone(),        
+        qr_svg,
+    }))
+}
+
 
 pub async fn shorten_url(
     State(pool): State<SqlitePool>,
