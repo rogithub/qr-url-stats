@@ -1,5 +1,5 @@
 # === 1. Build Stage ===
-FROM --platform=linux/amd64 rust:1.83-bookworm AS builder
+FROM --platform=linux/amd64 rust:1.84-bookworm AS builder
 
 # Instalar cross-compiler para ARM64
 RUN apt-get update && \
