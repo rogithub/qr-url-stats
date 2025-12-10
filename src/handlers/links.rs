@@ -113,9 +113,15 @@ pub async fn redirect_handler(
     .bind(&id)
     .fetch_optional(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| {
+        eprintln!("❌ Error DB: {}", e); 
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
     
-    let (original_url,) = result.ok_or(StatusCode::NOT_FOUND)?;
+    let (original_url,) = result.ok_or_else(|| {
+        eprintln!("❌ Link no encontrado: {}", id); 
+        StatusCode::NOT_FOUND
+    })?;
     
     let ip = addr.ip().to_string();
     let user_agent = headers
@@ -136,7 +142,10 @@ pub async fn redirect_handler(
     .bind(&timestamp)  // ← Agregar esto
     .execute(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| {
+        eprintln!("❌ Error insertando scan: {}", e);  // ← Agregar log
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
     
     sqlx::query("UPDATE links SET scans = scans + 1 WHERE id = ?")
         .bind(&id)
@@ -147,7 +156,12 @@ pub async fn redirect_handler(
     println!("✅ Scan registrado: {} → {} desde {} ({})", 
              id, original_url, ip, user_agent);
     
-    Ok(Redirect::to(&original_url))
+    println!("🔄 Redirigiendo a: {}", original_url); 
+    
+    let redirect = Redirect::permanent(&original_url);
+    println!("✅ Redirect creado correctamente"); 
+    
+    Ok(redirect)
 }
 
 
