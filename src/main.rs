@@ -52,6 +52,7 @@ async fn main() {
     let app = Router::new()
         .route("/api/shorten", post(handlers::links::shorten_url))
         .route("/r/{id}", get(handlers::links::redirect_handler))
+        .route("/api/{id}/location", post(handlers::links::register_location)) 
         .layer(GovernorLayer::new(governor_conf))
         .fallback(|| async {
             (StatusCode::NOT_FOUND, "404 - Not Found")

@@ -109,31 +109,23 @@ curl http://localhost:3000/r/abc12345
 
 ## 🗄️ Base de datos
 
-### Tabla `links`
-```sql
-CREATE TABLE links (
-    id TEXT PRIMARY KEY,
-    original_url TEXT NOT NULL,
-    scans INTEGER DEFAULT 0,
-    created_at TEXT NOT NULL
-);
-```
-
-### Tabla `scans`
-```sql
-CREATE TABLE scans (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    link_id TEXT NOT NULL,
-    ip_address TEXT,
-    user_agent TEXT,
-    scanned_at TEXT NOT NULL,
-    FOREIGN KEY (link_id) REFERENCES links(id)
-);
-```
-
 ## 🔧 Comandos útiles
 
+```bash
+# Crear archivo vacío
+touch qr.db
+
+# Ejecutar el SQL
+sqlite3 qr.db < init_db.sql
+
+# Verificar
+sqlite3 qr.db ".tables"
+sqlite3 qr.db ".schema"
+```
+
+
 ### Crear nueva migración
+
 ```bash
 sqlx migrate add nombre_de_migracion
 ```
@@ -164,7 +156,14 @@ sqlite3 qr.db "SELECT link_id, COUNT(*) as total FROM scans GROUP BY link_id;"
 ```bash
 curl -X POST http://localhost:3000/api/shorten \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://google.com"}'
+  -d '{"url": "https://xplaya.com"}'
+```
+
+**Crear location:**
+```bash
+curl -X POST http://localhost:3000/api/nUu4-VNO/location \
+  -H "Content-Type: application/json" \
+  -d '{"lat": 20.6772586, "lon": -87.1131889, "description": "Papelería El Gordo" }'
 ```
 
 **Probar rate limiting:**
@@ -196,31 +195,7 @@ use chrono_tz::America::Cancun;  // Cambiar según tu ubicación
 ### Puerto del servidor
 Edita en `src/main.rs`:
 ```rust
-let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
-```
-
-## 🚢 Deploy
-
-### Con Cloudflare Tunnel
-```bash
-# Instalar cloudflared
-brew install cloudflare/cloudflare/cloudflared
-
-# Iniciar tunnel
-cloudflared tunnel --url http://localhost:3000
-```
-
-### Con Docker (próximamente)
-```dockerfile
-# Dockerfile
-FROM rust:1.70 as builder
-WORKDIR /app
-COPY . .
-RUN cargo build --release
-
-FROM debian:bookworm-slim
-COPY --from=builder /app/target/release/qr-url-stats /usr/local/bin/
-CMD ["qr-url-stats"]
+let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
 ```
 
 ## 🐛 Troubleshooting

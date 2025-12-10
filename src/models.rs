@@ -16,3 +16,16 @@ pub struct ShortenResponse {
 pub struct ErrorResponse {
     pub error: String,
 }
+
+#[derive(Deserialize)]
+pub struct LocationRequest {
+    pub lat: f64,
+    pub lon: f64,
+    pub description: Option<String>, 
+}
+
+#[derive(Serialize)]
+pub struct LocationResponse {
+    pub message: String,
+    pub location_id: i64,
+}

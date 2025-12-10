@@ -10,7 +10,12 @@ use sqlx::SqlitePool;
 use std::net::SocketAddr;
 use qrcode::{QrCode, render::svg};
 
-use crate::{models::{ShortenRequest, ShortenResponse, ErrorResponse}, utils::validate_url};
+use crate::{models::{
+    ShortenRequest, 
+    ShortenResponse,
+    LocationRequest,
+    LocationResponse, 
+    ErrorResponse}, utils::validate_url};
 
 pub async fn shorten_url(
     State(pool): State<SqlitePool>,
@@ -104,4 +109,57 @@ pub async fn redirect_handler(
              id, original_url, ip, user_agent);
     
     Ok(Redirect::to(&original_url))
+}
+
+
+pub async fn register_location(
+    State(pool): State<SqlitePool>,
+    Path(id): Path<String>,
+    Json(payload): Json<LocationRequest>,
+) -> Result<Json<LocationResponse>, (StatusCode, Json<ErrorResponse>)> {
+    // Verificar que el link existe
+    let link_exists: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM links WHERE id = ?")
+        .bind(&id)
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| {
+            eprintln!("Error checking link: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorResponse { 
+                error: "Error interno del servidor".to_string() 
+            }))
+        })?;
+    
+    if link_exists == 0 {
+        return Err((StatusCode::NOT_FOUND, Json(ErrorResponse { 
+            error: "QR no encontrado".to_string() 
+        })));
+    }
+    
+    // Obtener timestamp actual
+    let now_cancun = Utc::now().with_timezone(&Cancun);
+    let timestamp = now_cancun.to_rfc3339();
+    
+    // Insertar la ubicación
+    let result = sqlx::query(
+        "INSERT INTO locations (link_id, lat, lon, description, created_at) 
+         VALUES (?, ?, ?, ?, ?)"
+    )
+    .bind(&id)
+    .bind(payload.lat)
+    .bind(payload.lon)
+    .bind(payload.description.unwrap_or_default())
+    .bind(&timestamp)
+    .execute(&pool)
+    .await
+    .map_err(|e| {
+        eprintln!("Error inserting location: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorResponse { 
+            error: "Error al guardar la ubicación".to_string() 
+        }))
+    })?;
+    
+    Ok(Json(LocationResponse {
+        message: format!("Ubicación registrada para QR {}", id),
+        location_id: result.last_insert_rowid(),
+    }))
 }

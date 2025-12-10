@@ -1,1 +1,5 @@
 /target
+qr.db
+qr.db-shm
+qr.db-wal
+init_db.sql
