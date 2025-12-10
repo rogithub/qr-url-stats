@@ -107,6 +107,14 @@ Redirige al URL original y registra el scan.
 curl http://localhost:3000/r/abc12345
 ```
 
+### GET `/{id}`
+Obtiene el qr code e información del número de scans.
+
+**Ejemplo:**
+```bash
+curl http://localhost:3000/abc12345
+```
+
 ## 🗄️ Base de datos
 
 ## 🔧 Comandos útiles
