@@ -3,8 +3,7 @@ mod models;
 mod utils;
 
 use axum::{
-    routing::{get, post},
-    Router,
+    Router, http::StatusCode, routing::{get, post}
 };
 use tower_governor::{
     governor::GovernorConfigBuilder,
@@ -13,7 +12,6 @@ use tower_governor::{
 
 
 use sqlx::sqlite::SqlitePool;
-use tower_http::services::ServeDir;
 use std::{net::SocketAddr, time::Duration};
 
 
@@ -55,7 +53,9 @@ async fn main() {
         .route("/api/shorten", post(handlers::links::shorten_url))
         .route("/r/{id}", get(handlers::links::redirect_handler))
         .layer(GovernorLayer::new(governor_conf))
-        .fallback_service(ServeDir::new("static"))
+        .fallback(|| async {
+            (StatusCode::NOT_FOUND, "404 - Not Found")
+        })
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
