@@ -28,7 +28,7 @@ https://qr.xplaya.com
 
 ## 📋 Prerequisitos
 
-- Rust 1.70+ ([Instalar Rust](https://rustup.rs/))
+- Rust 1.85+ ([Instalar Rust](https://rustup.rs/))
 - SQLx CLI (opcional, para migraciones):
   ```bash
   cargo install sqlx-cli --no-default-features --features sqlite
