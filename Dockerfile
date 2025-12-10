@@ -1,10 +1,11 @@
-# === 1. Build Stage con cross-compilation ===
-FROM --platform=linux/amd64 rust:1.70 AS builder
+# === 1. Build Stage ===
+FROM --platform=linux/amd64 rust:1.83-bookworm AS builder
 
 # Instalar cross-compiler para ARM64
 RUN apt-get update && \
     apt-get install -y gcc-aarch64-linux-gnu pkg-config libsqlite3-dev && \
-    rustup target add aarch64-unknown-linux-gnu
+    rustup target add aarch64-unknown-linux-gnu && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -13,20 +14,20 @@ RUN mkdir -p .cargo && \
     echo '[target.aarch64-unknown-linux-gnu]' > .cargo/config.toml && \
     echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
 
-# Copiar solo Cargo.toml primero (para cachear dependencias)
+# Copiar manifests y crear dummy project (cachear deps)
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
     cargo build --release --target aarch64-unknown-linux-gnu && \
     rm -rf src
 
-# Ahora copiar el código real y compilar
+# Copiar código real y compilar
 COPY . .
 RUN touch src/main.rs && \
     cargo build --release --target aarch64-unknown-linux-gnu
 
 # === 2. Runtime Stage ===
-FROM --platform=linux/arm64 debian:bullseye-slim
+FROM --platform=linux/arm64 debian:bookworm-slim
 
 RUN apt-get update && \
     apt-get install -y libsqlite3-0 ca-certificates && \
