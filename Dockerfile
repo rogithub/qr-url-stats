@@ -42,10 +42,10 @@ RUN apt-get update && \
 
 RUN mkdir -p /data/db
 
-# Solo copiar el binario - NADA MÁS
+# Solo copiar el binario
 COPY --from=builder /app/target/aarch64-unknown-linux-gnu/release/qr-url-stats /usr/local/bin/
 
 ENV DATABASE_URL=sqlite:/data/db/qr.db
 
-EXPOSE 8080
+EXPOSE 3000
 CMD ["/usr/local/bin/qr-url-stats"]
