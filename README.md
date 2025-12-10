@@ -2,6 +2,10 @@
 
 Acortador de URLs con códigos QR y tracking detallado de scans. Construido con Rust, Axum y SQLite.
 
+## Live server API (ver detalles para hacer requests)
+https://qr.xplaya.com
+
+
 ## ✨ Características
 
 - 🚀 API REST ultra rápida con Axum
